@@ -1,0 +1,1 @@
+export { useOutsideClickClose } from './useOutsideClickClose';
