@@ -16,7 +16,7 @@ import { Select } from 'src/ui/select';
 import { Separator } from 'src/ui/separator';
 import { Text } from 'src/ui/text';
 
-import type { ArticleStateType } from 'src/constants/articleProps';
+import type { ArticleStateType, OptionType } from 'src/constants/articleProps';
 
 import styles from './ArticleParamsForm.module.scss';
 
@@ -27,26 +27,26 @@ type ArticleParamsProps = {
 export const ArticleParamsForm = ({
   onApply,
 }: ArticleParamsProps): React.JSX.Element => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const [formState, setFormState] = useState<ArticleStateType>(defaultArticleState);
+  const [radioGroupKey, setRadioGroupKey] = useState(0);
 
   const toggleSidebar = (): void => {
-    setIsOpen((prev) => !prev);
+    setIsSidebarOpen((prev) => !prev);
   };
 
   useOutsideClickClose({
-    isOpen,
+    isOpen: isSidebarOpen,
     rootRef,
-    onChange: setIsOpen,
+    onChange: setIsSidebarOpen,
   });
 
-  const handleFormChange = <K extends keyof ArticleStateType>(
-    field: K,
-    value: ArticleStateType[K]
-  ): void => {
-    setFormState((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleFormChange =
+    (field: keyof ArticleStateType) =>
+    (option: OptionType): void => {
+      setFormState((prev) => ({ ...prev, [field]: option }));
+    };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
@@ -56,16 +56,17 @@ export const ArticleParamsForm = ({
   const handleReset = (): void => {
     setFormState(defaultArticleState);
     onApply(defaultArticleState);
+    setRadioGroupKey((prev) => prev + 1);
   };
 
   return (
     <>
-      <ArrowButton isOpen={isOpen} onClick={toggleSidebar} />
+      <ArrowButton isOpen={isSidebarOpen} onClick={toggleSidebar} />
       <aside
-        className={clsx(styles.container, isOpen && styles.container_open)}
+        className={clsx(styles.container, isSidebarOpen && styles.container_open)}
         ref={rootRef}
       >
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className={styles.form} onSubmit={handleSubmit} onReset={handleReset}>
           <Text as="h2" size={31} weight={800} uppercase>
             ЗАДАЙТЕ ПАРАМЕТРЫ
           </Text>
@@ -73,41 +74,37 @@ export const ArticleParamsForm = ({
             title="ШРИФТ"
             options={fontFamilyOptions}
             selected={formState.fontFamilyOption}
-            onChange={(option) => handleFormChange('fontFamilyOption', option)}
+            onChange={handleFormChange('fontFamilyOption')}
           />
           <RadioGroup
+            key={radioGroupKey}
             name="fontSize"
             title="РАЗМЕР ШРИФТА"
             options={fontSizeOptions}
             selected={formState.fontSizeOption}
-            onChange={(option) => handleFormChange('fontSizeOption', option)}
+            onChange={handleFormChange('fontSizeOption')}
           />
           <Select
             title="ЦВЕТ ШРИФТА"
             options={fontColors}
             selected={formState.fontColor}
-            onChange={(option) => handleFormChange('fontColor', option)}
+            onChange={handleFormChange('fontColor')}
           />
           <Separator />
           <Select
             title="ЦВЕТ ФОНА"
             options={backgroundColors}
             selected={formState.backgroundColor}
-            onChange={(option) => handleFormChange('backgroundColor', option)}
+            onChange={handleFormChange('backgroundColor')}
           />
           <Select
             title="ШИРИНА КОНТЕНТА"
             options={contentWidthArr}
             selected={formState.contentWidth}
-            onChange={(option) => handleFormChange('contentWidth', option)}
+            onChange={handleFormChange('contentWidth')}
           />
           <div className={styles.bottomContainer}>
-            <Button
-              title="Сбросить"
-              htmlType="reset"
-              type="clear"
-              onClick={handleReset}
-            />
+            <Button title="Сбросить" htmlType="reset" type="clear" />
             <Button title="Применить" htmlType="submit" type="apply" />
           </div>
         </form>
